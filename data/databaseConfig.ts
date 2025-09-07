@@ -4,7 +4,7 @@ import { DatabaseConfig } from './type';
 
 export const DATABASE_CONFIG: DatabaseConfig = {
   mongodb: {
-    uri: process.env.MONGODB_URI || 'mongodb+srv://amr-analytics-user:amr-analytics-2025@cluster0.y4hyigz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+    uri: process.env.MONGODB_URI || 'Enter your URL here',
     database: 'warehouse_analytics',
     collections: {
       orders: 'orders',
@@ -14,9 +14,9 @@ export const DATABASE_CONFIG: DatabaseConfig = {
     }
   },
   influxdb: {
-    url: process.env.INFLUXDB_URL || 'us-east-1-1.aws.cloud2.influxdata.com',
-    token: process.env.INFLUXDB_TOKEN || '-sQ7HgRYv-KK8M637nELRQulAqu2qEIr4kskcpE-Y0Txa-VVGL5GKhWDpl-mCCjE5Vzj0JtgLE4ZvkBu-P0uxw==',
-    org: process.env.INFLUXDB_ORG || '6a3d2839ea75b421',
+    url: process.env.INFLUXDB_URL || 'Enter your URL here',
+    token: process.env.INFLUXDB_TOKEN || 'Enter your token here',
+    org: process.env.INFLUXDB_ORG || 'Enter your Organization',
     bucket: process.env.INFLUXDB_BUCKET || 'amr-analytics-data',
     measurements: {
       robotTelemetry: 'robot_telemetry_v2',
