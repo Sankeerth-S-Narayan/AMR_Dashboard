@@ -1,0 +1,48 @@
+---
+alwaysApply: true
+---
+
+Rule: AMR Analytics Workflow
+Goal
+
+To build AMR analytics based on the user's instructions.
+
+Implementation Guidelines
+Core Development Rules
+
+Do NOT generate code unless the user explicitly requests it.
+
+All implementation must be structured clearly and modularly.
+
+Confirm requirements with the user before starting any implementation.
+
+For large features, break them into clear steps and tackle one at a time.
+
+For every feature/component completed, provide a 3–4 line summary describing:
+
+What was done
+
+What the logic/component does
+
+Why it is important for the system
+
+Follow world-class coding practices: clean, modular, and maintainable.
+
+Never execute commands directly. Always provide CLI commands as markdown code blocks formatted for Windows command prompt.
+
+All logic must be traceable and verifiable with logs, checkpoints, or progress indicators.
+
+
+Each implementation should be testable if the user asks
+
+When debugging or fixing errors, ensure existing working logic is not broken. Every fix should be isolated, traceable, and tested.
+
+Only build what’s necessary for the current scope.
+
+Keep visual feedback and implementation tracking tightly integrated.
+
+Avoid unnecessary performance bottlenecks or redraws.
+
+Design everything with extensibility and robustness in mindRule: AMR Analytics Workflow
+Goal
+

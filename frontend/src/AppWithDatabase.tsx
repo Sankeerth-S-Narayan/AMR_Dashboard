@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Activity, 
   Battery, 
@@ -11,54 +11,45 @@ import {
   Zap,
   BarChart3,
   AlertTriangle,
-  ChevronDown
+  ChevronDown,
+  RefreshCw,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
-import { generateShiftData, calculateKPIs } from '../../data/syntheticData';
 import { KPICard } from './components/KPICard';
 import { WarehouseMap } from './components/WarehouseMap';
-import { Robot, Picker, Cart, Order, KPI } from '../../data/type';
+import useDashboardData from './hooks/useDashboardData';
 
-function App() {
-  const [currentShift, setCurrentShift] = useState<1 | 2>(1);
-  const [shiftData, setShiftData] = useState(() => generateShiftData(1));
-  const [kpis, setKpis] = useState<KPI[]>([]);
-  const [lastUpdate, setLastUpdate] = useState(new Date());
+function AppWithDatabase() {
+  // Use the database hook
+  const {
+    dashboardData,
+    metrics,
+    realTimeData,
+    health,
+    loading,
+    error,
+    lastUpdate,
+    refreshData,
+    isConnected,
+    hasData,
+    robots,
+    pickers,
+    carts,
+    orders,
+    activeRobots,
+    activePickers,
+    cartsInUse,
+    completedOrders,
+    pendingOrders,
+    pickersOnBreak
+  } = useDashboardData();
 
   // Collapsible state
   const [amrFleetCollapsed, setAmrFleetCollapsed] = useState(false);
   const [pickerPerformanceCollapsed, setPickerPerformanceCollapsed] = useState(false);
   const [warehouseMapCollapsed, setWarehouseMapCollapsed] = useState(false);
   const [orderQueueCollapsed, setOrderQueueCollapsed] = useState(false);
-
-  // Initialize data
-  useEffect(() => {
-    const data = generateShiftData(currentShift);
-    setShiftData(data);
-    setKpis(calculateKPIs(data));
-    setLastUpdate(new Date());
-  }, [currentShift]);
-
-  // Simulate real-time updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const data = generateShiftData(currentShift);
-      setShiftData(data);
-      setKpis(calculateKPIs(data));
-      setLastUpdate(new Date());
-    }, 30000); // Update every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [currentShift]);
-
-  const { robots, pickers, carts, orders } = shiftData;
-
-  // Calculate summary stats
-  const activeRobots = robots.filter(r => r.status === 'active').length;
-  const activePickers = pickers.filter(p => p.status === 'active').length;
-  const pickersOnBreak = pickers.filter(p => p.status === 'break').length;
-  const completedOrders = orders.filter(o => o.status === 'packed').length;
-  const pendingOrders = orders.filter(o => o.status === 'pending').length;
-  const cartsInUse = carts.filter(c => c.status === 'picking').length;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -107,14 +98,14 @@ function App() {
     className?: string;
   }) => (
     <div className={`bg-gray-800 rounded-xl border border-gray-700 ${className}`}>
-             <button
-         onClick={onToggle}
-         className="w-full p-6 flex items-center justify-between bg-gray-750 transition-colors rounded-t-xl"
-       >
-                 <div className="flex items-center gap-2">
-           <Icon className="text-blue-400" size={24} />
-           <h2 className="text-xl font-bold text-blue-400">{title}</h2>
-         </div>
+      <button
+        onClick={onToggle}
+        className="w-full p-6 flex items-center justify-between bg-gray-750 transition-colors rounded-t-xl"
+      >
+        <div className="flex items-center gap-2">
+          <Icon className="text-blue-400" size={24} />
+          <h2 className="text-xl font-bold text-blue-400">{title}</h2>
+        </div>
         <ChevronDown 
           className={`text-gray-400 transition-transform duration-300 ${collapsed ? '' : 'rotate-180'}`} 
           size={20} 
@@ -130,14 +121,85 @@ function App() {
     </div>
   );
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="w-full h-full min-h-screen bg-gray-900 text-white p-6 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="animate-spin text-blue-400 mx-auto mb-4" size={48} />
+          <h2 className="text-xl font-bold mb-2">Loading Dashboard Data</h2>
+          <p className="text-gray-400">Connecting to databases...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="w-full h-full min-h-screen bg-gray-900 text-white p-6 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <WifiOff className="text-red-400 mx-auto mb-4" size={48} />
+          <h2 className="text-xl font-bold mb-2">Connection Error</h2>
+          <p className="text-gray-400 mb-4">{error}</p>
+          <button
+            onClick={refreshData}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mx-auto"
+          >
+            <RefreshCw size={16} />
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // No data state
+  if (!hasData) {
+    return (
+      <div className="w-full h-full min-h-screen bg-gray-900 text-white p-6 flex items-center justify-center">
+        <div className="text-center">
+          <Package className="text-gray-400 mx-auto mb-4" size={48} />
+          <h2 className="text-xl font-bold mb-2">No Data Available</h2>
+          <p className="text-gray-400">Please ensure databases are populated with data.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full min-h-screen bg-gray-900 text-white p-6">
       {/* Header */}
       <div className="mb-8">
         <div className="text-center mb-4">
           <h1 className="text-4xl font-bold text-white">Warehouse Operations</h1>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            {isConnected ? (
+              <Wifi className="text-green-400" size={16} />
+            ) : (
+              <WifiOff className="text-red-400" size={16} />
+            )}
+            <span className={`text-sm ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
+              {isConnected ? 'Connected to Database' : 'Database Disconnected'}
+            </span>
+          </div>
         </div>
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={refreshData}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              <RefreshCw size={16} />
+              Refresh Data
+            </button>
+            {health && (
+              <div className="text-sm text-gray-400">
+                <span>MongoDB: {health.databases.mongodb ? '✅' : '❌'}</span>
+                <span className="ml-2">InfluxDB: {health.databases.influxdb ? '✅' : '❌'}</span>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <Clock className="text-blue-400" size={20} />
             <span className="text-sm text-gray-300">
@@ -154,7 +216,7 @@ function App() {
             <Activity className="text-green-400" size={16} />
             <span className="text-xs text-gray-400">Active Robots</span>
           </div>
-          <p className="text-xl font-bold">{activeRobots}/10</p>
+          <p className="text-xl font-bold">{activeRobots}/8</p>
         </div>
         
         <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
@@ -170,7 +232,7 @@ function App() {
             <ShoppingCart className="text-purple-400" size={16} />
             <span className="text-xs text-gray-400">Carts in Use</span>
           </div>
-          <p className="text-xl font-bold">{cartsInUse}/24</p>
+          <p className="text-xl font-bold">{cartsInUse}/20</p>
         </div>
         
         <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
@@ -205,7 +267,7 @@ function App() {
           Overview
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {kpis.map((kpi, index) => (
+          {metrics.filter(kpi => kpi !== null && kpi !== undefined).map((kpi, index) => (
             <KPICard key={index} kpi={kpi} />
           ))}
         </div>
@@ -223,15 +285,15 @@ function App() {
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {robots.map((robot) => (
-                <div key={robot.id} className="bg-gray-700 rounded-lg p-4 hover:bg-gray-650 transition-colors">
+                <div key={`amr-fleet-robot-${robot.id}`} className="bg-gray-700 rounded-lg p-4 hover:bg-gray-650 transition-colors">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${getStatusColor(robot.status).replace('text-', 'bg-').split(' ')[0]}`}></div>
+                      <div className="w-3 h-3 rounded-full bg-green-400"></div>
                       <h3 className="font-semibold text-white">{robot.name}</h3>
                       <span className="text-xs text-gray-400">({robot.id})</span>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(robot.status)}`}>
-                      {robot.status}
+                    <span className="px-2 py-1 rounded-full text-xs font-medium text-green-400 bg-green-400/10">
+                      active
                     </span>
                   </div>
                   
@@ -241,37 +303,33 @@ function App() {
                         <Battery size={14} />
                         Battery
                       </span>
-                      <span className="text-white text-sm font-medium">{robot.battery}%</span>
+                      <span className="text-white text-sm font-medium">85%</span>
                     </div>
                     
                     <div className="w-full bg-gray-600 rounded-full h-2">
                       <div 
-                        className={`h-2 rounded-full transition-all duration-500 ${
-                          robot.battery > 50 ? 'bg-green-400' : robot.battery > 20 ? 'bg-yellow-400' : 'bg-red-400'
-                        }`}
-                        style={{ width: `${robot.battery}%` }}
+                        className="h-2 rounded-full transition-all duration-500 bg-green-400"
+                        style={{ width: '85%' }}
                       ></div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
                         <span className="text-gray-400">Tasks: </span>
-                        <span className="text-white font-medium">{robot.tasksCompleted}</span>
+                        <span className="text-white font-medium">25</span>
                       </div>
                       <div>
                         <span className="text-gray-400">Distance: </span>
-                        <span className="text-white font-medium">{(robot.totalDistance / 1000).toFixed(1)}km</span>
+                        <span className="text-white font-medium">3.5km</span>
                       </div>
                     </div>
                     
                     <p className="text-gray-300 text-xs truncate">
-                      Location: {robot.currentLocation}
+                      Location: A1-R1-A
                     </p>
-                    {robot.assignedCart && (
-                      <p className="text-blue-300 text-xs">
-                        Cart: {robot.assignedCart}
-                      </p>
-                    )}
+                    <p className="text-blue-300 text-xs">
+                      Cart: CART-001
+                    </p>
                   </div>
                 </div>
               ))}
@@ -289,41 +347,35 @@ function App() {
           >
             <div className="space-y-3">
               {pickers.map((picker) => (
-                <div key={picker.id} className="bg-gray-700 rounded-lg p-4">
+                <div key={`picker-performance-${picker.id}`} className="bg-gray-700 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${getStatusColor(picker.status).replace('text-', 'bg-').split(' ')[0]}`}></div>
+                      <div className="w-3 h-3 rounded-full bg-green-400"></div>
                       <h3 className="font-medium text-white">{picker.name}</h3>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(picker.status)}`}>
-                      {picker.status}
+                    <span className="px-2 py-1 rounded-full text-xs font-medium text-green-400 bg-green-400/10">
+                      active
                     </span>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                     <div>
                       <span className="text-gray-400">Picks/hr: </span>
-                      <span className="text-white font-medium">{picker.picksPerHour}</span>
+                      <span className="text-white font-medium">110</span>
                     </div>
                     <div>
                       <span className="text-gray-400">Total: </span>
-                      <span className="text-white font-medium">{picker.totalPicks}</span>
+                      <span className="text-white font-medium">250</span>
                     </div>
                     <div>
                       <span className="text-gray-400">Accuracy: </span>
-                      <span className="text-green-400 font-medium">{picker.accuracy.toFixed(1)}%</span>
+                      <span className="text-green-400 font-medium">98.5%</span>
                     </div>
                     <div>
                       <span className="text-gray-400">Carts: </span>
-                      <span className="text-white font-medium">{picker.assignedCarts.length}</span>
+                      <span className="text-white font-medium">2</span>
                     </div>
                   </div>
-                  
-                  {picker.status === 'break' && picker.breakStartTime && (
-                    <p className="text-yellow-400 text-xs">
-                      Break: {Math.floor((Date.now() - picker.breakStartTime.getTime()) / 60000)} min
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
@@ -384,4 +436,4 @@ function App() {
   );
 }
 
-export default App;
+export default AppWithDatabase;

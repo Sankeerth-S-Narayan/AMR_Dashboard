@@ -1,12 +1,21 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { KPI } from '../../../data/types';
+import { KPI } from '../../../data/type';
 
 interface KPICardProps {
   kpi: KPI;
 }
 
 export const KPICard: React.FC<KPICardProps> = ({ kpi }) => {
+  // Handle null or undefined kpi
+  if (!kpi) {
+    return (
+      <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <div className="text-gray-400 text-sm">No data available</div>
+      </div>
+    );
+  }
+
   const getTrendIcon = () => {
     switch (kpi.trend) {
       case 'up':
@@ -52,7 +61,7 @@ export const KPICard: React.FC<KPICardProps> = ({ kpi }) => {
       </div>
       <div className="flex items-baseline gap-2">
         <span className="text-2xl font-bold text-white">
-          {kpi.value.toLocaleString()}
+          {kpi.value !== null && kpi.value !== undefined ? kpi.value.toLocaleString() : '0'}
         </span>
         <span className="text-sm text-gray-400">{kpi.unit}</span>
       </div>

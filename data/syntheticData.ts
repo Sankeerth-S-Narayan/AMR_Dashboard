@@ -1,4 +1,4 @@
-import { Cart, Picker, Robot, Order, OrderItem, KPI } from './types';
+import { Cart, Picker, Robot, Order, OrderItem, KPI } from './type';
 
 // Generate synthetic data for a shift
 export const generateShiftData = (shiftNumber: 1 | 2) => {

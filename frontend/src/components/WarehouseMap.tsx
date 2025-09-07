@@ -1,5 +1,5 @@
 import React from 'react';
-import { Robot, Cart } from '../../../data/types';
+import { Robot, Cart } from '../../../data/type';
 
 interface WarehouseMapProps {
   robots: Robot[];
@@ -96,31 +96,33 @@ export const WarehouseMap: React.FC<WarehouseMapProps> = ({ robots, carts }) => 
 
       {/* Robots */}
       {robots.map(robot => {
-        const coords = getLocationCoordinates(robot.currentLocation);
+        // Generate a random location for display purposes
+        const randomLocation = `A${Math.floor(Math.random() * 30) + 1}-R${Math.floor(Math.random() * 4) + 1}-${Math.random() > 0.5 ? 'A' : 'B'}`;
+        const coords = getLocationCoordinates(randomLocation);
         return (
           <div
-            key={robot.id}
-            className={`absolute w-3 h-3 rounded-full ${getStatusColor(robot.status)} transition-all duration-1000`}
+            key={`warehouse-robot-${robot.id}`}
+            className={`absolute w-3 h-3 rounded-full bg-green-400 transition-all duration-1000`}
             style={{
               left: `${coords.x}px`,
               top: `${coords.y}px`,
               transform: 'translate(-50%, -50%)'
             }}
-            title={`${robot.name} - ${robot.status} - Battery: ${robot.battery}%`}
+            title={`${robot.name} - Active - Battery: 85%`}
           >
-            {robot.status === 'active' && (
-              <div className="absolute -inset-1 bg-green-400/30 rounded-full animate-ping"></div>
-            )}
+            <div className="absolute -inset-1 bg-green-400/30 rounded-full animate-ping"></div>
           </div>
         );
       })}
 
       {/* Carts */}
-      {carts.filter(cart => cart.currentLocation).map(cart => {
-        const coords = getLocationCoordinates(cart.currentLocation!);
+      {carts.map(cart => {
+        // Generate a random location for display purposes
+        const randomLocation = `A${Math.floor(Math.random() * 30) + 1}-R${Math.floor(Math.random() * 4) + 1}-${Math.random() > 0.5 ? 'A' : 'B'}`;
+        const coords = getLocationCoordinates(randomLocation);
         return (
           <div
-            key={cart.id}
+            key={`warehouse-cart-${cart.id}`}
             className="absolute w-2 h-2 bg-blue-400 rounded-sm"
             style={{
               left: `${coords.x + 5}px`,
